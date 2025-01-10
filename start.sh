@@ -20,7 +20,7 @@ for image in $k8s_image_list; do
     # 拉取镜像
     echo "Pulling image: $image"
     docker pull $image
-    new_image=$(echo $image | awk -F'/' '{print "${NEW_REPOSITORIES}/"$2"/"$3}')
+    new_image=$(echo $image | awk -F'/' '{for(i=2;i<=NF;i++) printf "%s/", $i; print ""}' | sed 's/\/$//')
     echo "Tagging image: $image"
     docker tag $image $new_image
     echo "Pushing image: $new_image"
