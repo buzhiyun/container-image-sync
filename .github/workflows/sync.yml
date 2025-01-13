@@ -1,0 +1,45 @@
+name: Sync Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: "镜像名称"
+        required: true
+        default: "alpine:3.21"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge
+      # with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # Login against a Docker registry except on PR
+      # https://github.com/docker/login-action
+      - name: Log into registry ${{ secrets.REGISTRY }}
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3 # v3.0.0
+        # uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ secrets.REGISTRY }}
+          # username: ${{ github.actor }}
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+
+          
+      - name: Run with custom parameters
+        env:
+          IMAGE: ${{ github.event.inputs.image }}
+          MY_REGISTRY: ${{ secrets.REGISTRY }}
+        run: |
+          bash ./start.sh
